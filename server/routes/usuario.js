@@ -4,12 +4,20 @@ const _       = require('underscore');
 const app     = express();
 const Usuario = require('../models/usuario');
 
-app.get('/usuario', function (req, res) {
+const { verificarToken, verificarAdminRole } = require('../middlewares/autentificacion');   
+
+app.get('/usuario', verificarToken, (req, res) => {
     
+    return res.json({
+        usuario: req.usuario, 
+        name: req.usuario.name,
+        email: req.usuario.email
+    });
+
     let since = Number(req.query.since || 0);
     let limit = Number(req.query.limit || 5);
 
-    Usuario.find({ "status": true }, 'name, email google role status  img')
+    Usuario.find({ "status": true }, 'name, email google role status img')
         .skip(since)
         .limit(limit)
         .exec()
@@ -32,7 +40,7 @@ app.get('/usuario', function (req, res) {
 
 });
   
-app.post('/usuario', function (req, res) {
+app.post('/usuario', [verificarToken, verificarAdminRole], (req, res) => {
     let body = req.body;
     let usuario = new Usuario({
         name: body.name,
@@ -56,7 +64,7 @@ app.post('/usuario', function (req, res) {
     });
 });
   
-app.put('/usuario/:id', function(req, res) {
+app.put('/usuario/:id', [verificarToken, verificarAdminRole], (req, res) => {
 
     let id = req.params.id;
     let body = _.pick(req.body,['name','email','img', 'role', 'status']);
@@ -79,7 +87,7 @@ app.put('/usuario/:id', function(req, res) {
 
 });
 
-app.delete('/usuario/:id', function (req, res) {
+app.delete('/usuario/:id', [verificarToken, verificarAdminRole], (req, res) => {
 
     let id = req.params.id;
     const changeStatus = { "status": false };
